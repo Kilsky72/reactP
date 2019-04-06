@@ -9,7 +9,8 @@
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View, AppRegistry } from 'react-native';
 import { Button, ThemeProvider, Header, SearchBar, SocialIcon } from 'react-native-elements';
-import { createStackNavigator,
+import { 
+    createStackNavigator,
     createAppContainer,
     createDrawerNavigator, 
     createSwitchNavigator,
@@ -20,10 +21,14 @@ import { createStackNavigator,
     DrawerActions,
 } from "react-navigation";
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { LoginButton, AccessToken, LoginManager, logout, } from 'react-native-fbsdk';
 
 import { formatPrettyObject } from 'jest-validate/build/utils';
-class ActivityBrowser  extends React.Component {
 
+class ActivityBrowserScreen  extends React.Component {
+  static navigationOptions = {
+    header: null,
+  };
   state = {
     search: '',
   };
@@ -39,23 +44,56 @@ class ActivityBrowser  extends React.Component {
         onChangeText={this.updateSearch}
         value={search}
         />
-        <Text onPress={() => this.props.navigation.navigate('Login')} style={styles.messageBox}>活動名稱: </Text>
+        <Text onPress={() => 
+        this.props.navigation.navigate('Login')} style={styles.messageBox}>活動名稱:
+        </Text>
       </View>
     );
   }
 }
 
-class Login extends React.Component {
+class LoginScreen extends React.Component {
+  initUser(token) {
+    fetch('https://graph.facebook.com/v2.5/me?fields=email,name,friends&access_token=' + token)
+    .then((response) => response.json())
+    .then((json) => {
+      // Some user object has been set up somewhere, build that user here
+      user.name = json.name
+      user.id = json.id
+      user.user_friends = json.friends
+      user.email = json.email
+      user.username = json.name
+      user.loading = false
+      user.loggedIn = true
+      user.avatar = setAvatar(json.id)      
+    })
+    .catch(() => {
+      reject('ERROR GETTING DATA FROM FACEBOOK')
+    })
+  }
   render() {
+    const { navigate } = this.props.navigation;
     return (
-      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       
-        <SocialIcon   
-          title='以Facebook登入'
-          button
-          type='facebook'
-          onPress={() => this.props.navigation.navigate('Home')}
-          />
+      <LoginButton
+          onLoginFinished={
+            (error, result) => {
+              if (error) {
+                console.log("login has error: " + result.error);
+              } else if (result.isCancelled) {
+                console.log("login is cancelled.");
+              } else {
+                AccessToken.getCurrentAccessToken().then(
+                  (data) => {
+                    const { accessToken } = data
+                  }
+                )
+                navigate('HomePage');
+              }
+            }
+          }
+          onLogoutFinished={() => console.log("logout.")}/>
         <SocialIcon 
           title='以Google登入'
           button
@@ -67,12 +105,25 @@ class Login extends React.Component {
 }
 
 class HomeScreen extends React.Component{
+
+
+
+  static navigationOptions =({ navigation }) => {
+    return{
+      headerLeft: (
+      <Icon
+				onPress={()=> navigation.openDrawer()} 
+        name='menu'
+        color="#000000"
+        size = {30}
+        />
+      ),
+    };
+  };
   render() {
     return (
       <View style={{ flex: 1,}}>
-        <Header
-          leftComponent = {<Icon name ='menu' size = {30} color='#000000' onPress={()=> DrawerActions.OPEN_DRAWER} />}
-        />
+      <Text></Text>
       </View>
     );
   }
@@ -80,42 +131,70 @@ class HomeScreen extends React.Component{
 
 
 
-
-
-const AppDrawerNavigator = createDrawerNavigator(
-  {
-    Home: {
-      screen: HomeScreen,
-    },
-  },
-  {
-    drawerPosition: 'left'
+const HomePageNavigator = createStackNavigator({
+  Home: {
+    screen: HomeScreen,
+    navigationOptions: {
+     // header: null,
   }
-  
+  }
+},
+{
+  initialRouteName: 'Home',
+}
 );
 
-const RootStack = createStackNavigator(
+
+
+const AppDrawerNavigator = createDrawerNavigator({
+  Home: HomePageNavigator,
+
+  },
+{
+  drawerPosition: 'left'
+}
+
+);
+
+const PreLoginNav = createStackNavigator(
   {
   Activity: {
-    screen: ActivityBrowser,
+    screen: ActivityBrowserScreen,
     navigationOptions: {
-      header: null,
+    //  header: null,
   }
   },
 
   Login: {
-    screen: Login,
-  },
-
-  Home: {
-    screen: AppDrawerNavigator,
+    screen: LoginScreen,
     navigationOptions: {
-      header: null,
+    //  header: null,
   }
   },
+
+
 },
 {
   initialRouteName: 'Activity',
+}
+);
+
+const RootStack = createStackNavigator({
+  PreLogin:{
+    screen: PreLoginNav,
+    navigationOptions: {
+        header: null,
+    }
+  },
+  HomePage :{
+    screen: AppDrawerNavigator,
+    navigationOptions: {
+      header: null,
+    }
+  }
+},
+{
+  initialRouteName: 'PreLogin',
 }
 );
 

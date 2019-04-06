@@ -9,12 +9,25 @@
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View, AppRegistry } from 'react-native';
 import { Button, ThemeProvider, Header, SearchBar, SocialIcon } from 'react-native-elements';
-import { createStackNavigator, createAppContainer, createDrawerNavigator, DrawerItems, SafeAreaView, DrawerNavigator } from "react-navigation";
+import { 
+    createStackNavigator,
+    createAppContainer,
+    createDrawerNavigator, 
+    createSwitchNavigator,
+    DrawerItems,
+    SafeAreaView,
+    DrawerNavigator,
+    createBottomTabNavigator,
+    DrawerActions,
+} from "react-navigation";
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
 
 import { formatPrettyObject } from 'jest-validate/build/utils';
-class ActivityBrowser  extends React.Component {
-
+class ActivityBrowserScreen  extends React.Component {
+  static navigationOptions = {
+    header: null,
+  };
   state = {
     search: '',
   };
@@ -30,22 +43,37 @@ class ActivityBrowser  extends React.Component {
         onChangeText={this.updateSearch}
         value={search}
         />
-        <Text onPress={() => this.props.navigation.navigate('Login')} style={styles.messageBox}>活動名稱: </Text>
+        <Text onPress={() => 
+        this.props.navigation.navigate('Login')} style={styles.messageBox}>活動名稱:
+        </Text>
       </View>
     );
   }
 }
 
-class Login extends React.Component {
+class LoginScreen extends React.Component {
   render() {
+    const { navigate } = this.props.navigation;
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
       
-        <SocialIcon   
+      <SocialIcon   
           title='以Facebook登入'
           button
           type='facebook'
-          onPress={() => this.props.navigation.navigate('Home')}
+          onPress={() => LoginManager.logInWithReadPermissions(["public_profile"]).then(
+  function(result) {
+    if (result.isCancelled) {
+      console.log("Login cancelled");
+    } else {
+      navigate('HomePage');
+
+  }
+  },
+  function(error) {
+    console.log("Login fail with error: " + error);
+  }
+)}
           />
         <SocialIcon 
           title='以Google登入'
@@ -57,52 +85,94 @@ class Login extends React.Component {
   }
 }
 
-class Home extends React.Component{
-  static navigationOptions = ({ navigation, screenProps }) => ({
-    headerLeft:         <Button onPress = {navigation.toggleDrawer}
-    title="Menu"
-    color="#fff">
-      <Text>Menu</Text>
-    </Button>,
-  });
+class HomeScreen extends React.Component{
+  static navigationOptions =({ navigation }) => {
+    return{
+      headerLeft: (
+      <Icon
+				onPress={()=> navigation.openDrawer()} 
+        name='menu'
+        color="#000000"
+        size = {30}
+        />
+      ),
+    };
+  };
   render() {
     return (
-      <View style={{ flex: 1, justifyContent: 'center' }}>
-
+      <View style={{ flex: 1,}}>
+      <Text></Text>
       </View>
     );
   }
 }
-const AppDrawerNavigator = createDrawerNavigator(
-  {
-    Home: Home
-  },
-  {
-    drawerPosition: 'right'
+
+
+
+const HomePageNavigator = createStackNavigator({
+  Home: {
+    screen: HomeScreen,
+    navigationOptions: {
+     // header: null,
   }
-);
-const RootStack = createStackNavigator(
-  {
-    Activity: {
-      screen: ActivityBrowser ,
-      navigationOptions: {
-        header: null,
-    }
-    },
-    Login: {
-      screen: Login,
-    },
-    Home: {
-      screen: Home,
-      navigationOptions: {
-    }
-    },
-  },
-  {
-    initialRouteName: 'Activity',
   }
+},
+{
+  initialRouteName: 'Home',
+}
 );
 
+const AppDrawerNavigator = createDrawerNavigator({
+  Home: HomePageNavigator,
+
+  },
+{
+  drawerPosition: 'left'
+}
+
+);
+
+const PreLoginNav = createStackNavigator(
+  {
+  Activity: {
+    screen: ActivityBrowserScreen,
+    navigationOptions: {
+    //  header: null,
+  }
+  },
+
+  Login: {
+    screen: LoginScreen,
+    navigationOptions: {
+    //  header: null,
+  }
+  },
+
+
+},
+{
+  initialRouteName: 'Activity',
+}
+);
+
+const RootStack = createStackNavigator({
+  PreLogin:{
+    screen: PreLoginNav,
+    navigationOptions: {
+        header: null,
+    }
+  },
+  HomePage :{
+    screen: AppDrawerNavigator,
+    navigationOptions: {
+      header: null,
+    }
+  }
+},
+{
+  initialRouteName: 'PreLogin',
+}
+);
 
 const AppContainer = createAppContainer(RootStack);
 
@@ -128,3 +198,4 @@ const styles = StyleSheet.create({
     borderRadius:10
 },
 });
+
