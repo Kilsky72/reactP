@@ -9,10 +9,10 @@
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View, AppRegistry,Image } from 'react-native';
 import { Button, ThemeProvider, Header, SearchBar, SocialIcon } from 'react-native-elements';
-import { 
+import {
     createStackNavigator,
     createAppContainer,
-    createDrawerNavigator, 
+    createDrawerNavigator,
     createSwitchNavigator,
     DrawerItems,
     SafeAreaView,
@@ -44,12 +44,12 @@ class ActivityBrowserScreen  extends React.Component {
         onChangeText={this.updateSearch}
         value={search}
         />
-        <Text onPress={() => 
+        <Text onPress={() =>
         this.props.navigation.navigate('Login')} style={{marginTop:20,marginLeft:5,backgroundColor:'#87CECB',width:350,
     paddingTop:20,
     paddingBottom:20,
     paddingLeft:20,
-    paddingRight:20, 
+    paddingRight:20,
     borderBottomWidth:1,
     borderTopWidth:1,
     borderLeftWidth:1,
@@ -88,7 +88,7 @@ class LoginScreen extends React.Component {
       }
     }
     onLogoutFinished={() => alert("logout.")}/>
-        <SocialIcon 
+        <SocialIcon
           title='以Google登入'
           button
           type='google'
@@ -124,7 +124,7 @@ class HomeScreen extends React.Component{
     return{
       headerLeft: (
       <Icon
-				onPress={()=> navigation.openDrawer()} 
+				onPress={()=> navigation.openDrawer()}
         name='menu'
         color="#000000"
         size = {30}
@@ -253,8 +253,7 @@ const styles = StyleSheet.create({
     paddingTop:10,
     paddingBottom:20,
     paddingLeft:20,
-    paddingRight:20, 
+    paddingRight:20,
     borderRadius:10
 },
 });
-
